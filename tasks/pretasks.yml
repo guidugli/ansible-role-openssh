@@ -1,0 +1,85 @@
+---
+##
+# This task file checks all the variables created to customize SSH server
+# configuration. This validation and filtering can be disabled when importing
+# this task file.
+#
+# The idea is to make the main tasks that actually change the SSH server
+# configuration clearer and smaller, and to prevent execution of any change
+# if any of the settings are incorrect.
+#
+# PS: SSH tasks does run sshd command to validate the changes but it will
+#     accept values that may not be disirable like a DEBUG log level or
+#     an invalid path (banner for example).
+##
+
+- name: Check integer variables
+  assert:
+    that:
+      - lookup('vars', item) is number
+    quiet: yes
+  when: vars[item] is defined
+  loop:
+    - openssh_port
+    - openssh_max_auth_tries
+    - openssh_client_alive_interval
+    - openssh_client_alive_count_max
+    - openssh_login_grace_time
+    - openssh_max_sessions
+
+- name: Check boolean variables
+  assert:
+    that:
+      - lookup('vars', item) | type_debug == 'bool'
+    quiet: yes
+  when: vars[item] is defined
+  loop:
+    - openssh_x11forwarding
+    - openssh_allow_tcp_forwarding
+    - openssh_ignore_rhosts
+    - openssh_host_based_authentication
+    - openssh_permit_root_login
+    - openssh_permit_empty_passwords
+    - openssh_permit_user_environment
+    - openssh_use_pam
+    - openssh_use_dns
+    - openssh_password_authentication
+    - openssh_permit_tunnel
+
+- name: Check list variables
+  assert:
+    that:
+      - lookup('vars', item) is sequence
+    quiet: yes
+  when: vars[item] is defined
+  loop:
+    - openssh_allow_users
+    - openssh_allow_groups
+    - openssh_deny_users
+    - openssh_deny_groups
+    - openssh_macs
+
+- name: Check remaining variables
+  vars:
+    pathre: '^(?:[\/])$|^(?:[\/][a-zA-Z0-9_.-]+)+[\/]?$'
+  assert:
+    that:
+      - openssh_log_level is string
+      - openssh_log_level in openssh_valid_log_levels
+      - openssh_banner is regex(pathre)
+      - openssh_max_startups is regex("^\d+:\d+:\d+$")
+
+- name: Set ansible port for the host
+  set_fact:
+    ansible_port: "{{ openssh_port }}"
+
+#### DETECT SSH PORT TO USE ####
+
+- name: Run tasks to detect SSH Port
+  import_tasks: detect_sshd_port.yml
+
+- name: Check if banner file exists
+  raw: "test -e {{ openssh_banner }} && echo -n true || echo -n false"
+  register: openssh_cmd_result
+  failed_when: openssh_cmd_result.stdout == 'false'
+  changed_when: false

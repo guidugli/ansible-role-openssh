@@ -1,0 +1,36 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    openssh_port: 22
+    openssh_log_level: INFO
+    openssh_x11forwarding: no
+    openssh_max_auth_tries: 4
+    openssh_client_alive_interval: 300
+    openssh_client_alive_count_max: 0
+    openssh_login_grace_time: 60
+    openssh_banner: /etc/issue.net
+    openssh_allow_tcp_forwarding: no
+    openssh_max_sessions: 4
+    openssh_allow_users: ['myuser']
+    openssh_allow_groups: []
+    openssh_deny_users: []
+    openssh_deny_groups: []
+    openssh_ignore_rhosts: yes
+    openssh_host_based_authentication: no
+    openssh_permit_root_login: no
+    openssh_permit_empty_passwords: no
+    openssh_permit_user_environment: no
+    openssh_use_pam: yes
+    openssh_max_startups: '10:30:60'
+    openssh_use_dns: yes
+  pre_tasks:
+
+    - name: update packages on debian family systems
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - guidugli.openssh

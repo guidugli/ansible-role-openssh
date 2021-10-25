@@ -1,0 +1,215 @@
+---
+##
+# This file includes all tasks to configure SSH Server settings.
+#
+# Input variables are processed by check_input/sshd_vars.yml task file.
+# Missing variables will assume it's default value based on recommendation
+# from CIS Control (check default statements on pretasks.yml file).
+##
+
+#- name: Run tasks to detect SSH Port
+#  import_tasks: detect_sshd_port.yml
+
+- name: Install openssh-server if not already installed
+  package:
+    name: openssh-server
+    state: present
+    update_cache: yes
+
+- name: Enable sshd service
+  service:
+    name: "sshd"
+    enabled: yes
+    state: started
+
+- name: Set permissions on SSH server configuration file
+  file:
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Ensure SSH access is limited
+  block:
+    - name: Configure AllowUsers
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^\s*AllowUsers\s'
+        line: "AllowUsers {{ openssh_allow_users | join(' ') }}"
+        insertafter: EOF
+        state: present
+      when: openssh_allow_users is defined and (openssh_allow_users | length>0)
+
+    - name: Configure AllowGroups
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^\s*AllowGroups\s'
+        line: "AllowGroups {{ openssh_allow_groups | join(' ') }}"
+        insertafter: EOF
+        state: present
+      when: openssh_allow_groups is defined and (openssh_allow_groups | length>0)
+
+    - name: Configure DenyUsers
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^\s*DenyUsers\s'
+        line: "DenyUsers {{ openssh_deny_users | join(' ') }}"
+        insertafter: EOF
+        state: present
+      when: openssh_deny_users is defined and (openssh_deny_users | length>0)
+
+    - name: Configure DenyGroups
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^\s*DenyGroups\s'
+        line: "DenyGroups {{ openssh_deny_groups | join(' ') }}"
+        insertafter: EOF
+        state: present
+      when: openssh_deny_groups is defined and (openssh_deny_groups | length>0)
+  tags:
+    - SSHD_ACCESS_CONTROL
+
+- name: Set Permissions on ssh private host keys
+  block:
+    - name: Find all ssh private host keys
+      find:
+        paths: /etc/ssh
+        file_type: file
+        patterns: ssh_host_*_key
+      register: ssh_host_out
+      changed_when: false
+
+    - name: Set permissions on all ssh private host keys
+      file:
+        path: "{{ item.path }}"
+        owner: root
+        group: "{{ host_keys_group }}"
+        mode: "{{ host_keys_mode }}"
+        state: file
+        setype: sshd_key_t
+        serole: object_r
+        seuser: system_u
+      loop: "{{ ssh_host_out.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+  tags:
+    - SSH_PRIVATE_HOST_KEYS
+
+- name: Set Permissions on ssh public host keys
+  block:
+    - name: Find all ssh public host keys
+      find:
+        paths: /etc/ssh
+        file_type: file
+        patterns: ssh_host_*_key.pub
+      register: ssh_hostpub_out
+      changed_when: false
+
+    - name: Set permissions on all ssh public host keys
+      file:
+        dest: "{{ item.path }}"
+        owner: root
+        group: root
+        mode: 0644
+        state: file
+        setype: sshd_key_t
+        serole: object_r
+        seuser: system_u
+      loop: "{{ ssh_hostpub_out.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+  tags:
+    - SSH_PUBLIC_HOST_KEYS
+
+# Set allowed MACS algorithms
+- name: Set MACS algorithms
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*MACs\s'
+    insertafter: '^#MACs'
+    line: "MACs {{ openssh_macs | join(',') }}"
+    create: no
+    state: present
+    validate: /usr/sbin/sshd -f %s -t
+  when:
+    - openssh_macs is defined
+    - openssh_macs | length > 0
+
+# Loop to configure SSH Daemon settings
+# Variables were checked and set defaults
+# by task file check_input/sshd_vars.yml
+- name: Setup sshd_config settings
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*{{ item.name }}\s'
+    insertafter: '^#{{ item.name }}\s'
+    line: "{{ item.name }} {{ item.value }}"
+    create: no
+    state: present
+    validate: /usr/sbin/sshd -f %s -t
+  loop:
+    - { name: 'Port', value: "{{ openssh_port }}" }
+    - { name: 'IgnoreRhosts', value: "{{ 'yes' if openssh_ignore_rhosts else 'no' }}" }
+    - { name: 'HostbasedAuthentication', value: "{{ 'yes' if openssh_host_based_authentication else 'no' }}" }
+    - { name: 'PermitRootLogin', value: "{{ 'yes' if openssh_permit_root_login else 'no' }}" }
+    - { name: 'PermitEmptyPasswords', value: "{{ 'yes' if openssh_permit_empty_passwords else 'no' }}" }
+    - { name: 'PermitUserEnvironment', value: "{{ 'yes' if openssh_permit_user_environment else 'no' }}" }
+    - { name: 'UsePAM', value: "{{ 'yes' if openssh_use_pam else 'no' }}" }
+    - { name: 'UseDNS', value: "{{ 'yes' if openssh_use_dns else 'no' }}" }
+    - { name: 'LogLevel', value: "{{ openssh_log_level }}" }
+    - { name: 'X11Forwarding', value: "{{ 'yes' if openssh_x11forwarding else 'no' }}" }
+    - { name: 'MaxAuthTries', value: "{{ openssh_max_auth_tries }}" }
+    - { name: 'ClientAliveCountMax', value: "{{ openssh_client_alive_count_max }}" }
+    - { name: 'ClientAliveInterval', value: "{{ openssh_client_alive_interval }}" }
+    - { name: 'LoginGraceTime', value: "{{ openssh_login_grace_time }}" }
+    - { name: 'AllowTcpForwarding', value: "{{ 'yes' if openssh_allow_tcp_forwarding else 'no' }}" }
+    - { name: 'Banner', value: "{{ openssh_banner }}" }
+    - { name: 'MaxStartups', value: "{{ openssh_max_startups }}" }
+    - { name: 'MaxSessions', value: "{{ openssh_max_sessions }}" }
+    - { name: 'PasswordAuthentication', value: "{{ 'yes' if openssh_password_authentication else 'no' }}" }
+    - { name: 'PermitTunnel', value: "{{ 'yes' if openssh_permit_tunnel else 'no' }}" }
+  loop_control:
+    label: "{{ item.name }}: {{ item.value }}"
+  notify: restart sshd
+
+- name: Setup selinux for alternate SSH port
+  seport:
+    ports: "{{ openssh_port }}"
+    proto: "tcp"
+    setype: "ssh_port_t"
+    state: "present"
+  when:
+    - ansible_selinux_python_present
+    - ansible_selinux.status == "enabled"
+
+- name: Ensure system-wide crypto policy is not over-ridden (RedHat family systems only)
+  lineinfile:
+    path: /etc/sysconfig/sshd
+    regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
+    line: '# CRYPTO_POLICY='
+  notify: restart sshd
+  when: ansible_os_family == 'RedHat'
+  tags:
+    - SSHD_USE_SYSTEM_CRYPTO
+
+# We notified "Restart sshd" if we modified the sshd config.
+# By calling flush_handlers, we make sure the handler is run *right now*
+- name: Ensure SSH is reloaded if need be
+  meta: flush_handlers
+
+- debug: var=configured_port  # noqa unnamed-task
+- debug: var=ansible_port  # noqa unnamed-task
+
+# We're done, make sure ansible_port is set properly so that any tasks
+# after this use the right ansible_port.
+- name: Ensure we use the configured SSH port for the remainder of the role
+  set_fact:
+    ansible_port: "{{ configured_port }}"
+
+- debug: var=ansible_port  # noqa unnamed-task
+
+# Gather facts should be set to false when running this role since it will
+# fail if the Ansible SSH port is not set correctly.
+# We run setup to gather facts here once the SSH port is set up.
+- name: Run deferred setup to gather facts
+  setup:
