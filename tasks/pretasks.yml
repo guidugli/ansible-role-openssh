@@ -14,7 +14,7 @@
 ##
 
 - name: Check integer variables
-  assert:
+  ansible.builtin.assert:
     that:
       - lookup('vars', item) is number
     quiet: yes
@@ -28,7 +28,7 @@
     - openssh_max_sessions
 
 - name: Check boolean variables
-  assert:
+  ansible.builtin.assert:
     that:
       - lookup('vars', item) | type_debug == 'bool'
     quiet: yes
@@ -47,7 +47,7 @@
     - openssh_permit_tunnel
 
 - name: Check list variables
-  assert:
+  ansible.builtin.assert:
     that:
       - lookup('vars', item) is sequence
     quiet: yes
@@ -62,7 +62,7 @@
 - name: Check remaining variables
   vars:
     pathre: '^(?:[\/])$|^(?:[\/][a-zA-Z0-9_.-]+)+[\/]?$'
-  assert:
+  ansible.builtin.assert:
     that:
       - openssh_log_level is string
       - openssh_log_level in openssh_valid_log_levels
@@ -70,16 +70,16 @@
       - openssh_max_startups is regex("^\d+:\d+:\d+$")
 
 - name: Set ansible port for the host
-  set_fact:
+  ansible.builtin.set_fact:
     ansible_port: "{{ openssh_port }}"
 
 #### DETECT SSH PORT TO USE ####
 
 - name: Run tasks to detect SSH Port
-  import_tasks: detect_sshd_port.yml
+  ansible.builtin.import_tasks: detect_sshd_port.yml
 
 - name: Check if banner file exists
-  raw: "test -e {{ openssh_banner }} && echo -n true || echo -n false"
+  ansible.builtin.raw: "test -e {{ openssh_banner }} && echo -n true || echo -n false"
   register: openssh_cmd_result
   failed_when: openssh_cmd_result.stdout == 'false'
   changed_when: false

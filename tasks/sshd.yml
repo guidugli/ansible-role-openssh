@@ -11,19 +11,19 @@
 #  import_tasks: detect_sshd_port.yml
 
 - name: Install openssh-server if not already installed
-  package:
+  ansible.builtin.package:
     name: openssh-server
     state: present
     update_cache: yes
 
 - name: Enable sshd service
-  service:
+  ansible.builtin.service:
     name: "sshd"
     enabled: yes
     state: started
 
 - name: Set permissions on SSH server configuration file
-  file:
+  ansible.builtin.file:
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
@@ -32,7 +32,7 @@
 - name: Ensure SSH access is limited
   block:
     - name: Configure AllowUsers
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/ssh/sshd_config
         regexp: '^\s*AllowUsers\s'
         line: "AllowUsers {{ openssh_allow_users | join(' ') }}"
@@ -41,7 +41,7 @@
       when: openssh_allow_users is defined and (openssh_allow_users | length>0)
 
     - name: Configure AllowGroups
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/ssh/sshd_config
         regexp: '^\s*AllowGroups\s'
         line: "AllowGroups {{ openssh_allow_groups | join(' ') }}"
@@ -50,7 +50,7 @@
       when: openssh_allow_groups is defined and (openssh_allow_groups | length>0)
 
     - name: Configure DenyUsers
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/ssh/sshd_config
         regexp: '^\s*DenyUsers\s'
         line: "DenyUsers {{ openssh_deny_users | join(' ') }}"
@@ -59,7 +59,7 @@
       when: openssh_deny_users is defined and (openssh_deny_users | length>0)
 
     - name: Configure DenyGroups
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/ssh/sshd_config
         regexp: '^\s*DenyGroups\s'
         line: "DenyGroups {{ openssh_deny_groups | join(' ') }}"
@@ -72,7 +72,7 @@
 - name: Set Permissions on ssh private host keys
   block:
     - name: Find all ssh private host keys
-      find:
+      ansible.builtin.find:
         paths: /etc/ssh
         file_type: file
         patterns: ssh_host_*_key
@@ -80,7 +80,7 @@
       changed_when: false
 
     - name: Set permissions on all ssh private host keys
-      file:
+      ansible.builtin.file:
         path: "{{ item.path }}"
         owner: root
         group: "{{ host_keys_group }}"
@@ -98,7 +98,7 @@
 - name: Set Permissions on ssh public host keys
   block:
     - name: Find all ssh public host keys
-      find:
+      ansible.builtin.find:
         paths: /etc/ssh
         file_type: file
         patterns: ssh_host_*_key.pub
@@ -106,7 +106,7 @@
       changed_when: false
 
     - name: Set permissions on all ssh public host keys
-      file:
+      ansible.builtin.file:
         dest: "{{ item.path }}"
         owner: root
         group: root
@@ -123,7 +123,7 @@
 
 # Set allowed MACS algorithms
 - name: Set MACS algorithms
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^\s*MACs\s'
     insertafter: '^#MACs'
@@ -139,7 +139,7 @@
 # Variables were checked and set defaults
 # by task file check_input/sshd_vars.yml
 - name: Setup sshd_config settings
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^\s*{{ item.name }}\s'
     insertafter: '^#{{ item.name }}\s'
@@ -173,7 +173,7 @@
   notify: restart sshd
 
 - name: Setup selinux for alternate SSH port
-  seport:
+  ansible.builtin.seport:
     ports: "{{ openssh_port }}"
     proto: "tcp"
     setype: "ssh_port_t"
@@ -183,7 +183,7 @@
     - ansible_selinux.status == "enabled"
 
 - name: Ensure system-wide crypto policy is not over-ridden (RedHat family systems only)
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/sysconfig/sshd
     regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
     line: '# CRYPTO_POLICY='
@@ -195,21 +195,21 @@
 # We notified "Restart sshd" if we modified the sshd config.
 # By calling flush_handlers, we make sure the handler is run *right now*
 - name: Ensure SSH is reloaded if need be
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
-- debug: var=configured_port  # noqa unnamed-task
-- debug: var=ansible_port  # noqa unnamed-task
+- ansible.builtin.debug: var=configured_port  # noqa unnamed-task
+- ansible.builtin.debug: var=ansible_port  # noqa unnamed-task
 
 # We're done, make sure ansible_port is set properly so that any tasks
 # after this use the right ansible_port.
 - name: Ensure we use the configured SSH port for the remainder of the role
-  set_fact:
+  ansible.builtin.set_fact:
     ansible_port: "{{ configured_port }}"
 
-- debug: var=ansible_port  # noqa unnamed-task
+- ansible.builtin.debug: var=ansible_port  # noqa unnamed-task
 
 # Gather facts should be set to false when running this role since it will
 # fail if the Ansible SSH port is not set correctly.
 # We run setup to gather facts here once the SSH port is set up.
 - name: Run deferred setup to gather facts
-  setup:
+  ansible.builtin.setup:
