@@ -173,7 +173,7 @@
   notify: Restart sshd
 
 - name: Setup selinux for alternate SSH port
-  ansible.builtin.seport:
+  community.general.seport:
     ports: "{{ openssh_port }}"
     proto: "tcp"
     setype: "ssh_port_t"
@@ -197,8 +197,11 @@
 - name: Ensure SSH is reloaded if need be
   ansible.builtin.meta: flush_handlers
 
-- ansible.builtin.debug: var=configured_port  # noqa unnamed-task
-- ansible.builtin.debug: var=ansible_port  # noqa unnamed-task
+- ansible.builtin.debug: # noqa unnamed-task
+    var: configured_port
+
+- ansible.builtin.debug: # noqa unnamed-task
+    var: ansible_port
 
 # We're done, make sure ansible_port is set properly so that any tasks
 # after this use the right ansible_port.
@@ -206,7 +209,8 @@
   ansible.builtin.set_fact:
     ansible_port: "{{ configured_port }}"
 
-- ansible.builtin.debug: var=ansible_port  # noqa unnamed-task
+- ansible.builtin.debug:  # noqa unnamed-task
+    var: ansible_port
 
 # Gather facts should be set to false when running this role since it will
 # fail if the Ansible SSH port is not set correctly.

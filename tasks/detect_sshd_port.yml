@@ -79,7 +79,8 @@
     msg: "The SSH port is neither 22 or {{ ansible_port }}."
   when: ssh_port_set is undefined
 
-- ansible.builtin.debug: var=ansible_port  # noqa unnamed-task
+- ansible.builtin.debug:  # noqa unnamed-task
+    var: ansible_port
 
 # Gather facts should be set to false when running this role since it will
 # fail if the Ansible SSH port is not set correctly.
