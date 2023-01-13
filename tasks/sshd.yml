@@ -30,6 +30,8 @@
     mode: '0600'
 
 - name: Ensure SSH access is limited
+  tags:
+    - SSHD_ACCESS_CONTROL
   block:
     - name: Configure AllowUsers
       ansible.builtin.lineinfile:
@@ -66,10 +68,10 @@
         insertafter: EOF
         state: present
       when: openssh_deny_groups is defined and (openssh_deny_groups | length>0)
-  tags:
-    - SSHD_ACCESS_CONTROL
 
 - name: Set Permissions on ssh private host keys
+  tags:
+    - SSH_PRIVATE_HOST_KEYS
   block:
     - name: Find all ssh private host keys
       ansible.builtin.find:
@@ -92,10 +94,10 @@
       loop: "{{ ssh_host_out.files }}"
       loop_control:
         label: "{{ item.path }}"
-  tags:
-    - SSH_PRIVATE_HOST_KEYS
 
 - name: Set Permissions on ssh public host keys
+  tags:
+    - SSH_PUBLIC_HOST_KEYS
   block:
     - name: Find all ssh public host keys
       ansible.builtin.find:
@@ -118,8 +120,6 @@
       loop: "{{ ssh_hostpub_out.files }}"
       loop_control:
         label: "{{ item.path }}"
-  tags:
-    - SSH_PUBLIC_HOST_KEYS
 
 # Set allowed MACS algorithms
 - name: Set MACS algorithms
@@ -170,7 +170,7 @@
     - { name: 'PermitTunnel', value: "{{ 'yes' if openssh_permit_tunnel else 'no' }}" }
   loop_control:
     label: "{{ item.name }}: {{ item.value }}"
-  notify: restart sshd
+  notify: Restart sshd
 
 - name: Setup selinux for alternate SSH port
   ansible.builtin.seport:
@@ -187,7 +187,7 @@
     path: /etc/sysconfig/sshd
     regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
     line: '# CRYPTO_POLICY='
-  notify: restart sshd
+  notify: Restart sshd
   when: ansible_os_family == 'RedHat'
   tags:
     - SSHD_USE_SYSTEM_CRYPTO
