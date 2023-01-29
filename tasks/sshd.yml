@@ -134,6 +134,22 @@
   when:
     - openssh_macs is defined
     - openssh_macs | length > 0
+    - not fs_crypto_policy_installed
+
+# Set allowed Kex algorithms
+- name: Set Kex algorithms
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*KexAlgorithms\s'
+    insertafter: '^#KexAlgorithms'
+    line: "KexAlgorithms {{ openssh_kex | join(',') }}"
+    create: no
+    state: present
+    validate: /usr/sbin/sshd -f %s -t
+  when:
+    - openssh_kex is defined
+    - openssh_kex | length > 0
+    - not fs_crypto_policy_installed
 
 # Loop to configure SSH Daemon settings
 # Variables were checked and set defaults
@@ -188,7 +204,9 @@
     regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
     line: '# CRYPTO_POLICY='
   notify: Restart sshd
-  when: ansible_os_family == 'RedHat'
+  when:
+    - ansible_os_family == 'RedHat'
+    - fs_crypto_policy_installed
   tags:
     - SSHD_USE_SYSTEM_CRYPTO
 

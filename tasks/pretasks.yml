@@ -83,3 +83,13 @@
   register: openssh_cmd_result
   failed_when: openssh_cmd_result.stdout == 'false'
   changed_when: false
+
+#### Look for crypto policy ####
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Set variable indicating if crypto policy is installed
+  ansible.builtin.set_fact:
+    fs_crypto_policy_installed: "{{ 'crypto-policies' in ansible_facts.packages }}"
