@@ -68,6 +68,8 @@
       - openssh_log_level in openssh_valid_log_levels
       - openssh_banner is regex(pathre)
       - openssh_max_startups is regex("^\d+:\d+:\d+$")
+      - openssh_config_file is defined
+      - openssh_config_file is string
 
 - name: Set ansible port for the host
   ansible.builtin.set_fact:

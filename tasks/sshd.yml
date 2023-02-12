@@ -24,10 +24,13 @@
 
 - name: Set permissions on SSH server configuration file
   ansible.builtin.file:
-    dest: /etc/ssh/sshd_config
+    dest: "{{ openssh_config_file }}"
     owner: root
     group: root
     mode: '0600'
+    state: touch
+    modification_time: preserve
+    access_time: preserve
 
 - name: Ensure SSH access is limited
   tags:
@@ -35,7 +38,7 @@
   block:
     - name: Configure AllowUsers
       ansible.builtin.lineinfile:
-        dest: /etc/ssh/sshd_config
+        dest: "{{ openssh_config_file }}"
         regexp: '^\s*AllowUsers\s'
         line: "AllowUsers {{ openssh_allow_users | join(' ') }}"
         insertafter: EOF
@@ -44,7 +47,7 @@
 
     - name: Configure AllowGroups
       ansible.builtin.lineinfile:
-        dest: /etc/ssh/sshd_config
+        dest: "{{ openssh_config_file }}"
         regexp: '^\s*AllowGroups\s'
         line: "AllowGroups {{ openssh_allow_groups | join(' ') }}"
         insertafter: EOF
@@ -53,7 +56,7 @@
 
     - name: Configure DenyUsers
       ansible.builtin.lineinfile:
-        dest: /etc/ssh/sshd_config
+        dest: "{{ openssh_config_file }}"
         regexp: '^\s*DenyUsers\s'
         line: "DenyUsers {{ openssh_deny_users | join(' ') }}"
         insertafter: EOF
@@ -62,7 +65,7 @@
 
     - name: Configure DenyGroups
       ansible.builtin.lineinfile:
-        dest: /etc/ssh/sshd_config
+        dest: "{{ openssh_config_file }}"
         regexp: '^\s*DenyGroups\s'
         line: "DenyGroups {{ openssh_deny_groups | join(' ') }}"
         insertafter: EOF
@@ -124,7 +127,7 @@
 # Set allowed MACS algorithms
 - name: Set MACS algorithms
   ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
+    path: "{{ openssh_config_file }}"
     regexp: '^\s*MACs\s'
     insertafter: '^#MACs'
     line: "MACs {{ openssh_macs | join(',') }}"
@@ -139,7 +142,7 @@
 # Set allowed Kex algorithms
 - name: Set Kex algorithms
   ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
+    path: "{{ openssh_config_file }}"
     regexp: '^\s*KexAlgorithms\s'
     insertafter: '^#KexAlgorithms'
     line: "KexAlgorithms {{ openssh_kex | join(',') }}"
@@ -156,7 +159,7 @@
 # by task file check_input/sshd_vars.yml
 - name: Setup sshd_config settings
   ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
+    path: "{{ openssh_config_file }}"
     regexp: '^\s*{{ item.name }}\s'
     insertafter: '^#{{ item.name }}\s'
     line: "{{ item.name }} {{ item.value }}"
@@ -215,10 +218,10 @@
 - name: Ensure SSH is reloaded if need be
   ansible.builtin.meta: flush_handlers
 
-- ansible.builtin.debug: # noqa unnamed-task
+- ansible.builtin.debug: # noqa name[missing]
     var: configured_port
 
-- ansible.builtin.debug: # noqa unnamed-task
+- ansible.builtin.debug: # noqa name[missing]
     var: ansible_port
 
 # We're done, make sure ansible_port is set properly so that any tasks
@@ -227,7 +230,7 @@
   ansible.builtin.set_fact:
     ansible_port: "{{ configured_port }}"
 
-- ansible.builtin.debug:  # noqa unnamed-task
+- ansible.builtin.debug:  # noqa name[missing]
     var: ansible_port
 
 # Gather facts should be set to false when running this role since it will

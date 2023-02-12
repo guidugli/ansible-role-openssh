@@ -1,6 +1,8 @@
 ---
 # defaults file for openssh-server
 
+openssh_config_file: /etc/ssh/sshd_config
+
 openssh_port: 22
 openssh_log_level: INFO
 openssh_x11forwarding: no
