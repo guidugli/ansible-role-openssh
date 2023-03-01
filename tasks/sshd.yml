@@ -154,6 +154,21 @@
     - openssh_kex | length > 0
     - not fs_crypto_policy_installed
 
+# Set allowed Ciphers
+- name: Set allowed ciphers
+  ansible.builtin.lineinfile:
+    path: "{{ openssh_config_file }}"
+    regexp: '^\s*Ciphers\s'
+    insertafter: '^#Ciphers'
+    line: "Ciphers {{ openssh_ciphers | join(',') }}"
+    create: no
+    state: present
+    validate: /usr/sbin/sshd -f %s -t
+  when:
+    - openssh_ciphers is defined
+    - openssh_ciphers | length > 0
+    - not fs_crypto_policy_installed
+
 # Loop to configure SSH Daemon settings
 # Variables were checked and set defaults
 # by task file check_input/sshd_vars.yml
