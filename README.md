@@ -61,9 +61,9 @@ Specifies that .rhosts and .shosts files will not be used in RhostsRSAAuthentica
 
 Specifies whether rhosts or /etc/hosts.equiv authentication together with successful public key client host authentication is allowed (host-based authentication). This option is similar to RhostsRSAAuthentication and applies to protocol version 2 only.
 
-    openssh_permit_root_login: no
+    openssh_permit_root_login: 'no'
 
-Specifies whether root can log in using ssh. The argument must be 'yes', 'without-password', 'forced-commands-only', or 'no'. If this option is set to ''without-password'', password authentication is disabled for root. If this option is set to 'forced-commands-only', root login with public key authentication will be allowed, but only if the command option has been specified (which may be useful for taking remote backups even if root login is normally not allowed). All other authentication methods are disabled for root. If this option is set to 'no', root is not allowed to log in. 
+Specifies whether root can log in using ssh. The argument must be 'yes', 'without-password', 'forced-commands-only', or 'no'. If this option is set to ''without-password'', password authentication is disabled for root. If this option is set to 'forced-commands-only', root login with public key authentication will be allowed, but only if the command option has been specified (which may be useful for taking remote backups even if root login is normally not allowed). All other authentication methods are disabled for root. If this option is set to 'no', root is not allowed to log in. NOTE: this option needs to be specified in quotes, otherwise will fail. 
 
     openssh_permit_empty_passwords: no
 

@@ -15,7 +15,7 @@ openssh_allow_tcp_forwarding: no
 openssh_max_sessions: 4
 openssh_ignore_rhosts: yes
 openssh_host_based_authentication: no
-openssh_permit_root_login: no
+openssh_permit_root_login: 'no'
 openssh_permit_empty_passwords: no
 openssh_permit_user_environment: no
 openssh_use_pam: yes

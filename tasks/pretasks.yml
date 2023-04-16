@@ -38,13 +38,19 @@
     - openssh_allow_tcp_forwarding
     - openssh_ignore_rhosts
     - openssh_host_based_authentication
-    - openssh_permit_root_login
     - openssh_permit_empty_passwords
     - openssh_permit_user_environment
     - openssh_use_pam
     - openssh_use_dns
     - openssh_password_authentication
     - openssh_permit_tunnel
+
+- name: Check openssh_permit_root_login variable
+  ansible.builtin.assert:
+    that:
+      - openssh_permit_root_login is defined
+      - openssh_permit_root_login is string
+      - openssh_permit_root_login in ['yes', 'no', 'without-password', 'prohibit-password', 'forced-commands-only']
 
 - name: Check list variables
   ansible.builtin.assert:

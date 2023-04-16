@@ -185,7 +185,7 @@
     - { name: 'Port', value: "{{ openssh_port }}" }
     - { name: 'IgnoreRhosts', value: "{{ 'yes' if openssh_ignore_rhosts else 'no' }}" }
     - { name: 'HostbasedAuthentication', value: "{{ 'yes' if openssh_host_based_authentication else 'no' }}" }
-    - { name: 'PermitRootLogin', value: "{{ 'yes' if openssh_permit_root_login else 'no' }}" }
+    - { name: 'PermitRootLogin', value: "{{ openssh_permit_root_login }}" }
     - { name: 'PermitEmptyPasswords', value: "{{ 'yes' if openssh_permit_empty_passwords else 'no' }}" }
     - { name: 'PermitUserEnvironment', value: "{{ 'yes' if openssh_permit_user_environment else 'no' }}" }
     - { name: 'UsePAM', value: "{{ 'yes' if openssh_use_pam else 'no' }}" }
