@@ -7,7 +7,9 @@ _host_keys_group:
   default: root
   RedHat: ssh_keys
   Fedora: ssh_keys
+  Fedora-38: root
   CentOS: ssh_keys
+  Rocky: ssh_keys
 
 host_keys_group: "{{ _host_keys_group[ansible_distribution ~ '-' ~ ansible_distribution_major_version] |
                  default(_host_keys_group[ansible_distribution]) | default(_host_keys_group['default']) }}"
@@ -16,7 +18,9 @@ _host_keys_mode:
   default: '0600'
   RedHat: '0640'
   Fedora: '0640'
+  Fedora-38: '0600'
   CentOS: '0640'
+  Rocky: '0640'
 
 host_keys_mode: "{{ _host_keys_mode[ansible_distribution ~ '-' ~ ansible_distribution_major_version] |
                 default(_host_keys_mode[ansible_distribution]) | default(_host_keys_mode['default']) }}"
