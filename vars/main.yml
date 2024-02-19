@@ -7,6 +7,7 @@ _host_keys_group:
   default: root
   RedHat: ssh_keys
   Fedora: ssh_keys
+  Fedora-39: root
   Fedora-38: root
   CentOS: ssh_keys
   Rocky: ssh_keys
@@ -18,6 +19,7 @@ _host_keys_mode:
   default: '0600'
   RedHat: '0640'
   Fedora: '0640'
+  Fedora-39: '0600'
   Fedora-38: '0600'
   CentOS: '0640'
   Rocky: '0640'
