@@ -13,6 +13,10 @@ Role Variables
 
 **Available variables are listed below, along with default values (see defaults/main.yml):**
 
+    openssh_config_file: /etc/ssh/sshd_config
+
+Configuration file to update. In more modern versions of OpenSSH, it is recommended to store the configuration on sshd_config.d directory.
+
     openssh_port: 22
 
 SSH service port number. This role is able to change port number but depending on the situation it may fail (firewall problems, selinux, etc).
