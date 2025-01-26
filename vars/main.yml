@@ -26,3 +26,10 @@ _host_keys_mode:
 
 host_keys_mode: "{{ _host_keys_mode[ansible_distribution ~ '-' ~ ansible_distribution_major_version] |
                 default(_host_keys_mode[ansible_distribution]) | default(_host_keys_mode['default']) }}"
+
+_openssh_service_name:
+  default: sshd
+  Ubuntu-24: ssh
+
+openssh_service_name: "{{ _openssh_service_name[ansible_distribution ~ '-' ~ ansible_distribution_major_version] |
+                      default(_openssh_service_name[ansible_distribution]) | default(_openssh_service_name['default']) }}"
