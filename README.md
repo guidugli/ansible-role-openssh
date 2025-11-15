@@ -117,6 +117,36 @@ This keyword can be followed by a list of group name patterns, separated by spac
 
 This keyword can be followed by a list of group name patterns, separated by spaces. Login is disallowed for users whose primary group or supplementary group list matches one of the patterns. Only group names are valid; a numerical group ID is not recognized. By default, login is allowed for all groups. The allow/deny directives are processed in the following order: DenyUsers, AllowUsers, DenyGroups, and finally AllowGroups. 
 
+    openssh_macs:
+      - hmac-sha2-512-etm@openssh.com
+      - hmac-sha2-256-etm@openssh.com
+      - hmac-sha2-512
+      - hmac-sha2-256
+
+On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
+
+    openssh_kex:
+      - curve25519-sha256
+      - curve25519-sha256@libssh.org
+      - diffie-hellman-group14-sha256
+      - diffie-hellman-group16-sha512
+      - diffie-hellman-group18-sha512
+      - ecdh-sha2-nistp521
+      - ecdh-sha2-nistp384
+      - ecdh-sha2-nistp256
+      - diffie-hellman-group-exchange-sha256
+
+On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
+
+    openssh_ciphers:
+      - aes256-gcm@openssh.com
+      - aes128-gcm@openssh.com
+      - aes256-ctr
+      - aes192-ctr
+      - aes128-ctr
+
+On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
+
 **The variables listed below do not need to be changed for targeted systems (see vars/main.yml):**
 
     host_keys_group:
