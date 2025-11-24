@@ -2,7 +2,7 @@
 - name: Converge
   hosts: all
   vars:
-    openssh_port: 22
+    openssh_port: 1234
     openssh_log_level: INFO
     openssh_x11forwarding: no
     openssh_max_auth_tries: 4

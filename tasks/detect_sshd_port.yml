@@ -22,12 +22,12 @@
 
 # From localhost, check if we're able to reach {{ inventory_hostname }} on
 # port 22
-- name: "Connecting to {{ inventory_hostname }} using the default SSH port"
+- name: "Connecting to {{ inventory_hostname }} using the default SSH port 22"
   become: no
   ansible.builtin.wait_for:
     port: "22"
     state: "started"
-    host: "{{ inventory_hostname }}"
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
     connect_timeout: "5"
     timeout: "10"
   delegate_to: "localhost"
@@ -50,12 +50,12 @@
 # If unreachable on port 22, check if we're able to reach
 # {{ inventory_hostname }} on {{ ansible_port }} provided by the inventory
 # from localhost
-- name: Check if we're using the inventory-provided SSH port
+- name: "Connecting to {{ inventory_hostname }} using the default SSH port {{ ansible_port }}."
   become: no
   ansible.builtin.wait_for:
     port: "{{ ansible_port }}"
     state: "started"
-    host: "{{ inventory_hostname }}"
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
     connect_timeout: "5"
     timeout: "10"
   delegate_to: "localhost"

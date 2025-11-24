@@ -13,12 +13,15 @@
 #     an invalid path (banner for example).
 ##
 
+#### VALIDATE VARIABLES ####
+
 - name: Check integer variables
   ansible.builtin.assert:
     that:
       - lookup('vars', item) is number
     quiet: yes
   when: vars[item] is defined
+  delegate_to: localhost
   loop:
     - openssh_port
     - openssh_max_auth_tries
@@ -33,6 +36,7 @@
       - lookup('vars', item) | type_debug == 'bool'
     quiet: yes
   when: vars[item] is defined
+  delegate_to: localhost
   loop:
     - openssh_x11forwarding
     - openssh_allow_tcp_forwarding
@@ -51,6 +55,7 @@
       - openssh_permit_root_login is defined
       - openssh_permit_root_login is string
       - openssh_permit_root_login in ['yes', 'no', 'without-password', 'prohibit-password', 'forced-commands-only']
+  delegate_to: localhost
 
 - name: Check list variables
   ansible.builtin.assert:
@@ -58,6 +63,7 @@
       - lookup('vars', item) is sequence
     quiet: yes
   when: vars[item] is defined
+  delegate_to: localhost
   loop:
     - openssh_allow_users
     - openssh_allow_groups
@@ -76,12 +82,13 @@
       - openssh_max_startups is regex("^\d+:\d+:\d+$")
       - openssh_config_file is defined
       - openssh_config_file is string
+  delegate_to: localhost
+
+#### DETECT SSH PORT TO USE ####
 
 - name: Set ansible port for the host
   ansible.builtin.set_fact:
     ansible_port: "{{ openssh_port }}"
-
-#### DETECT SSH PORT TO USE ####
 
 - name: Run tasks to detect SSH Port
   ansible.builtin.import_tasks: detect_sshd_port.yml
