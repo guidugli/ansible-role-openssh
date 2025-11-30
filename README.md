@@ -166,6 +166,7 @@ Example Playbook
 ----------------
 
     - hosts: servers
+      become: no
       vars:
         openssh_port: 10999
         openssh_allow_users['user1', 'user2']
