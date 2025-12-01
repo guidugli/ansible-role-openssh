@@ -2,6 +2,7 @@
 # handlers file for openssh-server
 
 - name: Restart sshd
+  become: yes
   ansible.builtin.systemd:
     name: sshd
     enabled: yes
