@@ -23,7 +23,6 @@
 # From localhost, check if we're able to reach {{ inventory_hostname }} on
 # port 22
 - name: "Connecting to {{ inventory_hostname }} using the default SSH port 22"
-  become: no
   ansible.builtin.wait_for:
     port: "22"
     state: "started"
@@ -51,7 +50,6 @@
 # {{ inventory_hostname }} on {{ ansible_port }} provided by the inventory
 # from localhost
 - name: "Connecting to {{ inventory_hostname }} using the default SSH port {{ ansible_port }}."
-  become: no
   ansible.builtin.wait_for:
     port: "{{ ansible_port }}"
     state: "started"

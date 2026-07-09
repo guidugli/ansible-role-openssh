@@ -1,3 +1,8 @@
+[![CI](https://github.com/guidugli/ansible-role-openssh/actions/workflows/CI.yml/badge.svg)](https://github.com/guidugli/ansible-role-openssh/actions/workflows/CI.yml)
+[![Release](https://img.shields.io/github/v/tag/guidugli/ansible-role-openssh?sort=semver)](https://github.com/guidugli/ansible-role-openssh/tags)
+[![Galaxy](https://img.shields.io/badge/galaxy-guidugli.openssh-blue)](https://galaxy.ansible.com/ui/standalone/roles/guidugli/openssh/)
+[![License](https://img.shields.io/github/license/guidugli/ansible-role-openssh)](https://github.com/guidugli/ansible-role-openssh/blob/main/LICENSE)
+
 Ansible Role: openssh
 =========
 
