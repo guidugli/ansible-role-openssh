@@ -9,5 +9,4 @@
   ansible.builtin.import_tasks: pretasks.yml
 
 - name: Import tasks to configure SSH Server
-  become: yes
   ansible.builtin.import_tasks: sshd.yml

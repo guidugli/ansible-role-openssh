@@ -32,4 +32,5 @@ _openssh_service_name:
   Ubuntu-24: ssh
 
 openssh_service_name: "{{ _openssh_service_name[ansible_distribution ~ '-' ~ ansible_distribution_major_version] |
-                      default(_openssh_service_name[ansible_distribution]) | default(_openssh_service_name['default']) }}"
+                      default(_openssh_service_name[ansible_distribution]) |
+                      default(_openssh_service_name['default']) }}"

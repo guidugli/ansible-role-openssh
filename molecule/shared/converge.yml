@@ -1,6 +1,8 @@
 ---
 - name: Converge
   hosts: all
+  gather_facts: true
+  become: false
   vars:
     openssh_port: 1234
     openssh_log_level: INFO
@@ -45,25 +47,5 @@
       - aes256-ctr
       - aes192-ctr
       - aes128-ctr
-
-
-  pre_tasks:
-
-    - name: Update packages on debian family systems
-      ansible.builtin.apt:
-        update_cache: yes
-        cache_valid_time: 3600
-      when: ansible_os_family == 'Debian'
-
-    - name: Install python3-dnf on RedHat based systems
-      ansible.builtin.raw: 'dnf install python3-dnf -y'
-      failed_when: false
-      changed_when: false
-
-    - name: Install python-apt on Debian based systems
-      ansible.builtin.raw: 'apt install python-apt -y'
-      failed_when: false
-      changed_when: false
-
   roles:
-    - guidugli.openssh
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"

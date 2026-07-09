@@ -7,8 +7,8 @@
 # from CIS Control (check default statements on pretasks.yml file).
 ##
 
-#- name: Run tasks to detect SSH Port
-#  import_tasks: detect_sshd_port.yml
+# - name: Run tasks to detect SSH Port
+#   import_tasks: detect_sshd_port.yml
 
 - name: Install openssh-server if not already installed
   ansible.builtin.package:
@@ -119,7 +119,7 @@
         dest: "{{ item.path }}"
         owner: root
         group: root
-        mode: 0644
+        mode: '0644'
         state: file
         setype: sshd_key_t
         serole: object_r
