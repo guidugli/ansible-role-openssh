@@ -1,0 +1,130 @@
+---
+argument_specs:
+  main:
+    short_description: Configure and harden OpenSSH server settings.
+    options:
+      openssh_config_file:
+        type: str
+        default: /etc/ssh/sshd_config
+      openssh_port:
+        type: int
+        default: 22
+      openssh_log_level:
+        type: str
+        default: INFO
+        choices:
+          - QUIET
+          - FATAL
+          - ERROR
+          - INFO
+          - VERBOSE
+          - DEBUG
+          - DEBUG1
+          - DEBUG2
+          - DEBUG3
+      openssh_x11forwarding:
+        type: bool
+        default: false
+      openssh_max_auth_tries:
+        type: int
+        default: 4
+      openssh_client_alive_interval:
+        type: int
+        default: 300
+      openssh_client_alive_count_max:
+        type: int
+        default: 0
+      openssh_login_grace_time:
+        type: int
+        default: 60
+      openssh_banner:
+        type: str
+        default: /etc/issue.net
+      openssh_allow_tcp_forwarding:
+        type: bool
+        default: false
+      openssh_max_sessions:
+        type: int
+        default: 4
+      openssh_ignore_rhosts:
+        type: bool
+        default: true
+      openssh_host_based_authentication:
+        type: bool
+        default: false
+      openssh_permit_root_login:
+        type: str
+        default: 'no'
+        choices:
+          - 'yes'
+          - 'no'
+          - without-password
+          - prohibit-password
+          - forced-commands-only
+      openssh_permit_empty_passwords:
+        type: bool
+        default: false
+      openssh_permit_user_environment:
+        type: bool
+        default: false
+      openssh_use_pam:
+        type: bool
+        default: true
+      openssh_max_startups:
+        type: str
+        default: '10:30:60'
+      openssh_use_dns:
+        type: bool
+        default: true
+      openssh_password_authentication:
+        type: bool
+        default: true
+      openssh_permit_tunnel:
+        type: bool
+        default: false
+      openssh_allow_users:
+        type: list
+        elements: str
+        default: []
+      openssh_allow_groups:
+        type: list
+        elements: str
+        default: []
+      openssh_deny_users:
+        type: list
+        elements: str
+        default: []
+      openssh_deny_groups:
+        type: list
+        elements: str
+        default: []
+      openssh_macs:
+        type: list
+        elements: str
+        default:
+          - hmac-sha2-512-etm@openssh.com
+          - hmac-sha2-256-etm@openssh.com
+          - hmac-sha2-512
+          - hmac-sha2-256
+      openssh_kex:
+        type: list
+        elements: str
+        default:
+          - curve25519-sha256
+          - curve25519-sha256@libssh.org
+          - diffie-hellman-group14-sha256
+          - diffie-hellman-group16-sha512
+          - diffie-hellman-group18-sha512
+          - ecdh-sha2-nistp521
+          - ecdh-sha2-nistp384
+          - ecdh-sha2-nistp256
+          - diffie-hellman-group-exchange-sha256
+      openssh_ciphers:
+        type: list
+        elements: str
+        default:
+          - aes256-gcm@openssh.com
+          - aes128-gcm@openssh.com
+          - aes256-ctr
+          - aes192-ctr
+          - aes128-ctr

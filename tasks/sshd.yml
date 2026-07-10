@@ -1,94 +1,167 @@
 ---
-##
-# This file includes all tasks to configure SSH Server settings.
-#
-# Input variables are processed by check_input/sshd_vars.yml task file.
-# Missing variables will assume it's default value based on recommendation
-# from CIS Control (check default statements on pretasks.yml file).
-##
 
-# - name: Run tasks to detect SSH Port
-#   import_tasks: detect_sshd_port.yml
+- name: Refresh apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == 'apt'
+  tags:
+    - openssh
+    - install
 
-- name: Install openssh-server if not already installed
+- name: Ensure OpenSSH server package is installed
   ansible.builtin.package:
     name: openssh-server
     state: present
-    update_cache: yes
+  tags:
+    - openssh
+    - install
 
-- name: Enable sshd service
+- name: Ensure SSH service is enabled and started
   ansible.builtin.service:
     name: "{{ openssh_service_name }}"
-    enabled: yes
+    enabled: true
     state: started
+  tags:
+    - openssh
+    - service
 
-- name: Print config file location
-  ansible.builtin.debug:
-    var: openssh_config_file
-
-- name: Set permissions on SSH server configuration file
+- name: Ensure SSH configuration file exists with secure permissions
   ansible.builtin.file:
-    dest: "{{ openssh_config_file }}"
+    path: "{{ openssh_config_file }}"
     owner: root
     group: root
     mode: '0600'
-    state: touch
-    modification_time: preserve
-    access_time: preserve
-
-- name: Ensure SSH access is limited
+    state: file
   tags:
-    - SSHD_ACCESS_CONTROL
+    - openssh
+    - config
+
+- name: Configure SSH access control directives
+  tags:
+    - openssh
+    - config
   block:
     - name: Configure AllowUsers
       ansible.builtin.lineinfile:
-        dest: "{{ openssh_config_file }}"
-        regexp: '^\s*AllowUsers\s'
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*AllowUsers\s+'
         line: "AllowUsers {{ openssh_allow_users | join(' ') }}"
         insertafter: EOF
         state: present
-      when: openssh_allow_users is defined and (openssh_allow_users | length>0)
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_allow_users | length > 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
+
+    - name: Remove AllowUsers when list is empty
+      ansible.builtin.lineinfile:
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*AllowUsers\s+'
+        state: absent
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_allow_users | length == 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
 
     - name: Configure AllowGroups
       ansible.builtin.lineinfile:
-        dest: "{{ openssh_config_file }}"
-        regexp: '^\s*AllowGroups\s'
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*AllowGroups\s+'
         line: "AllowGroups {{ openssh_allow_groups | join(' ') }}"
         insertafter: EOF
         state: present
-      when: openssh_allow_groups is defined and (openssh_allow_groups | length>0)
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_allow_groups | length > 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
+
+    - name: Remove AllowGroups when list is empty
+      ansible.builtin.lineinfile:
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*AllowGroups\s+'
+        state: absent
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_allow_groups | length == 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
 
     - name: Configure DenyUsers
       ansible.builtin.lineinfile:
-        dest: "{{ openssh_config_file }}"
-        regexp: '^\s*DenyUsers\s'
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*DenyUsers\s+'
         line: "DenyUsers {{ openssh_deny_users | join(' ') }}"
         insertafter: EOF
         state: present
-      when: openssh_deny_users is defined and (openssh_deny_users | length>0)
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_deny_users | length > 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
+
+    - name: Remove DenyUsers when list is empty
+      ansible.builtin.lineinfile:
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*DenyUsers\s+'
+        state: absent
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_deny_users | length == 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
 
     - name: Configure DenyGroups
       ansible.builtin.lineinfile:
-        dest: "{{ openssh_config_file }}"
-        regexp: '^\s*DenyGroups\s'
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*DenyGroups\s+'
         line: "DenyGroups {{ openssh_deny_groups | join(' ') }}"
         insertafter: EOF
         state: present
-      when: openssh_deny_groups is defined and (openssh_deny_groups | length>0)
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_deny_groups | length > 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
 
-- name: Set Permissions on ssh private host keys
+    - name: Remove DenyGroups when list is empty
+      ansible.builtin.lineinfile:
+        path: "{{ openssh_config_file }}"
+        regexp: '^\s*DenyGroups\s+'
+        state: absent
+        validate: /usr/sbin/sshd -f %s -t
+      when: openssh_deny_groups | length == 0
+      notify: Restart sshd
+      tags:
+        - openssh
+        - config
+
+- name: Ensure private host key permissions are correct
   tags:
-    - SSH_PRIVATE_HOST_KEYS
+    - openssh
+    - config
   block:
-    - name: Find all ssh private host keys
+    - name: Find private SSH host keys
       ansible.builtin.find:
         paths: /etc/ssh
         file_type: file
         patterns: ssh_host_*_key
       register: ssh_host_out
       changed_when: false
+      tags:
+        - openssh
+        - config
 
-    - name: Set permissions on all ssh private host keys
+    - name: Set private host key permissions
       ansible.builtin.file:
         path: "{{ item.path }}"
         owner: root
@@ -101,22 +174,29 @@
       loop: "{{ ssh_host_out.files }}"
       loop_control:
         label: "{{ item.path }}"
+      tags:
+        - openssh
+        - config
 
-- name: Set Permissions on ssh public host keys
+- name: Ensure public host key permissions are correct
   tags:
-    - SSH_PUBLIC_HOST_KEYS
+    - openssh
+    - config
   block:
-    - name: Find all ssh public host keys
+    - name: Find public SSH host keys
       ansible.builtin.find:
         paths: /etc/ssh
         file_type: file
         patterns: ssh_host_*_key.pub
       register: ssh_hostpub_out
       changed_when: false
+      tags:
+        - openssh
+        - config
 
-    - name: Set permissions on all ssh public host keys
+    - name: Set public host key permissions
       ansible.builtin.file:
-        dest: "{{ item.path }}"
+        path: "{{ item.path }}"
         owner: root
         group: root
         mode: '0644'
@@ -127,62 +207,68 @@
       loop: "{{ ssh_hostpub_out.files }}"
       loop_control:
         label: "{{ item.path }}"
+      tags:
+        - openssh
+        - config
 
-# Set allowed MACS algorithms
-- name: Set MACS algorithms
+- name: Configure MAC algorithms
   ansible.builtin.lineinfile:
     path: "{{ openssh_config_file }}"
-    regexp: '^\s*MACs\s'
-    insertafter: '^#MACs'
+    regexp: '^\s*MACs\s+'
     line: "MACs {{ openssh_macs | join(',') }}"
-    create: no
+    insertafter: EOF
+    create: false
     state: present
     validate: /usr/sbin/sshd -f %s -t
   when:
-    - openssh_macs is defined
     - openssh_macs | length > 0
     - not fs_crypto_policy_installed
+  notify: Restart sshd
+  tags:
+    - openssh
+    - config
 
-# Set allowed Kex algorithms
-- name: Set Kex algorithms
+- name: Configure key exchange algorithms
   ansible.builtin.lineinfile:
     path: "{{ openssh_config_file }}"
-    regexp: '^\s*KexAlgorithms\s'
-    insertafter: '^#KexAlgorithms'
+    regexp: '^\s*KexAlgorithms\s+'
     line: "KexAlgorithms {{ openssh_kex | join(',') }}"
-    create: no
+    insertafter: EOF
+    create: false
     state: present
     validate: /usr/sbin/sshd -f %s -t
   when:
-    - openssh_kex is defined
     - openssh_kex | length > 0
     - not fs_crypto_policy_installed
+  notify: Restart sshd
+  tags:
+    - openssh
+    - config
 
-# Set allowed Ciphers
-- name: Set allowed ciphers
+- name: Configure ciphers
   ansible.builtin.lineinfile:
     path: "{{ openssh_config_file }}"
-    regexp: '^\s*Ciphers\s'
-    insertafter: '^#Ciphers'
+    regexp: '^\s*Ciphers\s+'
     line: "Ciphers {{ openssh_ciphers | join(',') }}"
-    create: no
+    insertafter: EOF
+    create: false
     state: present
     validate: /usr/sbin/sshd -f %s -t
   when:
-    - openssh_ciphers is defined
     - openssh_ciphers | length > 0
     - not fs_crypto_policy_installed
+  notify: Restart sshd
+  tags:
+    - openssh
+    - config
 
-# Loop to configure SSH Daemon settings
-# Variables were checked and set defaults
-# by task file check_input/sshd_vars.yml
-- name: Setup sshd_config settings
+- name: Configure sshd settings
   ansible.builtin.lineinfile:
     path: "{{ openssh_config_file }}"
-    regexp: '^\s*{{ item.name }}\s'
-    insertafter: '^#{{ item.name }}\s'
+    regexp: '^\s*{{ item.name }}\s+'
     line: "{{ item.name }} {{ item.value }}"
-    create: no
+    insertafter: EOF
+    create: false
     state: present
     validate: /usr/sbin/sshd -f %s -t
   loop:
@@ -209,51 +295,52 @@
   loop_control:
     label: "{{ item.name }}: {{ item.value }}"
   notify: Restart sshd
+  tags:
+    - openssh
+    - config
 
-- name: Setup selinux for alternate SSH port
+- name: Configure SELinux SSH port type for custom port
   community.general.seport:
     ports: "{{ openssh_port }}"
-    proto: "tcp"
-    setype: "ssh_port_t"
-    state: "present"
+    proto: tcp
+    setype: ssh_port_t
+    state: present
   when:
-    - ansible_selinux_python_present
-    - ansible_selinux.status == "enabled"
+    - ansible_facts.get('selinux_python_present', false)
+    - ansible_facts['selinux']['status'] == 'enabled'
+  tags:
+    - openssh
+    - config
 
-- name: Ensure system-wide crypto policy is not over-ridden (RedHat family systems only)
+- name: Ensure system crypto policy is not overridden on Red Hat family systems
   ansible.builtin.lineinfile:
     path: /etc/sysconfig/sshd
     regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
     line: '# CRYPTO_POLICY='
-  notify: Restart sshd
   when:
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
     - fs_crypto_policy_installed
+  notify: Restart sshd
   tags:
-    - SSHD_USE_SYSTEM_CRYPTO
+    - openssh
+    - config
 
-# We notified "Restart sshd" if we modified the sshd config.
-# By calling flush_handlers, we make sure the handler is run *right now*
-- name: Ensure SSH is reloaded if need be
+- name: Apply pending SSH handler changes
   ansible.builtin.meta: flush_handlers
+  tags:
+    - openssh
+    - service
 
-- ansible.builtin.debug: # noqa name[missing]
-    var: configured_port
-
-- ansible.builtin.debug: # noqa name[missing]
-    var: ansible_port
-
-# We're done, make sure ansible_port is set properly so that any tasks
-# after this use the right ansible_port.
-- name: Ensure we use the configured SSH port for the remainder of the role
+- name: Restore configured SSH port for subsequent tasks
   ansible.builtin.set_fact:
     ansible_port: "{{ configured_port }}"
+  changed_when: false
+  tags:
+    - openssh
+    - validate
 
-- ansible.builtin.debug:  # noqa name[missing]
-    var: ansible_port
-
-# Gather facts should be set to false when running this role since it will
-# fail if the Ansible SSH port is not set correctly.
-# We run setup to gather facts here once the SSH port is set up.
-- name: Run deferred setup to gather facts
+- name: Gather facts after SSH configuration
   ansible.builtin.setup:
+  tags:
+    - openssh
+    - validate

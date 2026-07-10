@@ -1,37 +1,39 @@
 ---
-# defaults file for openssh-server
-
+# Default variables for openssh role.
 openssh_config_file: /etc/ssh/sshd_config
-
 openssh_port: 22
 openssh_log_level: INFO
-openssh_x11forwarding: no
+openssh_x11forwarding: false
 openssh_max_auth_tries: 4
 openssh_client_alive_interval: 300
 openssh_client_alive_count_max: 0
 openssh_login_grace_time: 60
 openssh_banner: /etc/issue.net
-openssh_allow_tcp_forwarding: no
+openssh_allow_tcp_forwarding: false
 openssh_max_sessions: 4
-openssh_ignore_rhosts: yes
-openssh_host_based_authentication: no
+openssh_ignore_rhosts: true
+openssh_host_based_authentication: false
 openssh_permit_root_login: 'no'
-openssh_permit_empty_passwords: no
-openssh_permit_user_environment: no
-openssh_use_pam: yes
+openssh_permit_empty_passwords: false
+openssh_permit_user_environment: false
+openssh_use_pam: true
 openssh_max_startups: '10:30:60'
-openssh_use_dns: yes
-openssh_password_authentication: yes
-openssh_permit_tunnel: no
+openssh_use_dns: true
+openssh_password_authentication: true
+openssh_permit_tunnel: false
+openssh_allow_users: []
+openssh_allow_groups: []
+openssh_deny_users: []
+openssh_deny_groups: []
 
-# On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
+# On systems with crypto policy (for example Fedora and newer Red Hat family releases),
+# these values are not applied when crypto-policies are installed.
 openssh_macs:
   - hmac-sha2-512-etm@openssh.com
   - hmac-sha2-256-etm@openssh.com
   - hmac-sha2-512
   - hmac-sha2-256
 
-# On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
 openssh_kex:
   - curve25519-sha256
   - curve25519-sha256@libssh.org
@@ -43,15 +45,9 @@ openssh_kex:
   - ecdh-sha2-nistp256
   - diffie-hellman-group-exchange-sha256
 
-# On systems with crypto-policy (Fedora, RedHat 8, etc), this will not be set
 openssh_ciphers:
   - aes256-gcm@openssh.com
   - aes128-gcm@openssh.com
   - aes256-ctr
   - aes192-ctr
   - aes128-ctr
-
-#openssh_allow_users: ['myuser']
-#openssh_allow_groups: []
-#openssh_deny_users: []
-#openssh_deny_groups: []

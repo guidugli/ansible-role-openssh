@@ -1,12 +1,12 @@
 ---
-# tasks file for openssh-server
-
-- name: Main ansible_port
-  ansible.builtin.debug:
-    var: ansible_port
-
-- name: Validate provided variables and set os dependent variables
+- name: Validate variables and derive OS-specific values
   ansible.builtin.import_tasks: pretasks.yml
+  tags:
+    - openssh
+    - validate
 
-- name: Import tasks to configure SSH Server
+- name: Configure OpenSSH server
   ansible.builtin.import_tasks: sshd.yml
+  tags:
+    - openssh
+    - config

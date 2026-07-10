@@ -1,25 +1,9 @@
 ---
-##
-# This task file checks all the variables created to customize SSH server
-# configuration. This validation and filtering can be disabled when importing
-# this task file.
-#
-# The idea is to make the main tasks that actually change the SSH server
-# configuration clearer and smaller, and to prevent execution of any change
-# if any of the settings are incorrect.
-#
-# PS: SSH tasks does run sshd command to validate the changes but it will
-#     accept values that may not be disirable like a DEBUG log level or
-#     an invalid path (banner for example).
-##
-
-#### VALIDATE VARIABLES ####
-
-- name: Check integer variables
+- name: Validate integer variables
   ansible.builtin.assert:
     that:
       - lookup('vars', item) is number
-    quiet: yes
+    quiet: true
   when: vars[item] is defined
   delegate_to: localhost
   loop:
@@ -29,12 +13,15 @@
     - openssh_client_alive_count_max
     - openssh_login_grace_time
     - openssh_max_sessions
+  tags:
+    - openssh
+    - validate
 
-- name: Check boolean variables
+- name: Validate boolean variables
   ansible.builtin.assert:
     that:
       - lookup('vars', item) | type_debug == 'bool'
-    quiet: yes
+    quiet: true
   when: vars[item] is defined
   delegate_to: localhost
   loop:
@@ -48,20 +35,27 @@
     - openssh_use_dns
     - openssh_password_authentication
     - openssh_permit_tunnel
+  tags:
+    - openssh
+    - validate
 
-- name: Check openssh_permit_root_login variable
+- name: Validate root login setting
   ansible.builtin.assert:
     that:
       - openssh_permit_root_login is defined
       - openssh_permit_root_login is string
       - openssh_permit_root_login in ['yes', 'no', 'without-password', 'prohibit-password', 'forced-commands-only']
+    quiet: true
   delegate_to: localhost
+  tags:
+    - openssh
+    - validate
 
-- name: Check list variables
+- name: Validate list variables
   ansible.builtin.assert:
     that:
       - lookup('vars', item) is sequence
-    quiet: yes
+    quiet: true
   when: vars[item] is defined
   delegate_to: localhost
   loop:
@@ -70,41 +64,71 @@
     - openssh_deny_users
     - openssh_deny_groups
     - openssh_macs
+    - openssh_kex
+    - openssh_ciphers
+  tags:
+    - openssh
+    - validate
 
-- name: Check remaining variables
+- name: Validate remaining variables
   vars:
-    pathre: '^(?:[\/])$|^(?:[\/][a-zA-Z0-9_.-]+)+[\/]?$'
+    pathre: '(?:[/]).+'
   ansible.builtin.assert:
     that:
       - openssh_log_level is string
       - openssh_log_level in openssh_valid_log_levels
       - openssh_banner is regex(pathre)
-      - openssh_max_startups is regex("^\d+:\d+:\d+$")
-      - openssh_config_file is defined
+      - openssh_max_startups is regex('^\d+:\d+:\d+$')
       - openssh_config_file is string
+    quiet: true
   delegate_to: localhost
+  tags:
+    - openssh
+    - validate
 
-#### DETECT SSH PORT TO USE ####
-
-- name: Set ansible port for the host
+- name: Set ansible_port from role variable
   ansible.builtin.set_fact:
     ansible_port: "{{ openssh_port }}"
-
-- name: Run tasks to detect SSH Port
-  ansible.builtin.import_tasks: detect_sshd_port.yml
-
-- name: Check if banner file exists
-  ansible.builtin.raw: "test -e {{ openssh_banner }} && echo -n true || echo -n false"
-  register: openssh_cmd_result
-  failed_when: openssh_cmd_result.stdout == 'false'
   changed_when: false
+  tags:
+    - openssh
+    - validate
 
-#### Look for crypto policy ####
+- name: Detect SSH port to use for the session
+  ansible.builtin.import_tasks: detect_sshd_port.yml
+  tags:
+    - openssh
+    - validate
 
-- name: Gather the package facts
+- name: Check whether banner file exists
+  ansible.builtin.stat:
+    path: "{{ openssh_banner }}"
+  register: openssh_banner_stat
+  tags:
+    - openssh
+    - validate
+
+- name: Fail when banner file is missing
+  ansible.builtin.assert:
+    that:
+      - openssh_banner_stat.stat.exists
+    fail_msg: "Banner file not found: {{ openssh_banner }}"
+    quiet: true
+  tags:
+    - openssh
+    - validate
+
+- name: Gather installed package facts
   ansible.builtin.package_facts:
     manager: auto
+  tags:
+    - openssh
+    - validate
 
-- name: Set variable indicating if crypto policy is installed
+- name: Detect whether crypto-policies package is installed
   ansible.builtin.set_fact:
-    fs_crypto_policy_installed: "{{ 'crypto-policies' in ansible_facts.packages }}"
+    fs_crypto_policy_installed: "{{ 'crypto-policies' in ansible_facts['packages'] }}"
+  changed_when: false
+  tags:
+    - openssh
+    - validate

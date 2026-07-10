@@ -1,8 +1,9 @@
 ---
-# handlers file for openssh-server
-
 - name: Restart sshd
-  ansible.builtin.systemd:
-    name: sshd
-    enabled: yes
+  ansible.builtin.service:
+    name: "{{ openssh_service_name }}"
+    enabled: true
     state: restarted
+  tags:
+    - openssh
+    - service

@@ -1,5 +1,22 @@
 ---
-- name: Verify audit role
+- name: Verify openssh role
   hosts: all
   gather_facts: true
   tasks:
+    - name: Read sshd configuration file
+      ansible.builtin.slurp:
+        path: /etc/ssh/sshd_config
+      register: openssh_sshd_config
+      tags:
+        - openssh
+        - validate
+
+    - name: Assert expected sshd settings are present
+      ansible.builtin.assert:
+        that:
+          - "'Port 1234' in (openssh_sshd_config.content | b64decode)"
+          - "'AllowUsers myuser' in (openssh_sshd_config.content | b64decode)"
+        quiet: true
+      tags:
+        - openssh
+        - validate
