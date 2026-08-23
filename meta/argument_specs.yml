@@ -12,16 +12,7 @@ argument_specs:
       openssh_log_level:
         type: str
         default: INFO
-        choices:
-          - QUIET
-          - FATAL
-          - ERROR
-          - INFO
-          - VERBOSE
-          - DEBUG
-          - DEBUG1
-          - DEBUG2
-          - DEBUG3
+        choices: [QUIET, FATAL, ERROR, INFO, VERBOSE, DEBUG, DEBUG1, DEBUG2, DEBUG3]
       openssh_x11forwarding:
         type: bool
         default: false
@@ -55,12 +46,7 @@ argument_specs:
       openssh_permit_root_login:
         type: str
         default: 'no'
-        choices:
-          - 'yes'
-          - 'no'
-          - without-password
-          - prohibit-password
-          - forced-commands-only
+        choices: ['yes', 'no', without-password, prohibit-password, forced-commands-only]
       openssh_permit_empty_passwords:
         type: bool
         default: false
@@ -112,17 +98,17 @@ argument_specs:
         default:
           - curve25519-sha256
           - curve25519-sha256@libssh.org
-          - diffie-hellman-group14-sha256
-          - diffie-hellman-group16-sha512
-          - diffie-hellman-group18-sha512
           - ecdh-sha2-nistp521
           - ecdh-sha2-nistp384
           - ecdh-sha2-nistp256
-          - diffie-hellman-group-exchange-sha256
+          - diffie-hellman-group14-sha256
+          - diffie-hellman-group16-sha512
+          - diffie-hellman-group18-sha512
       openssh_ciphers:
         type: list
         elements: str
         default:
+          - chacha20-poly1305@openssh.com
           - aes256-gcm@openssh.com
           - aes128-gcm@openssh.com
           - aes256-ctr

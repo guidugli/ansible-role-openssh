@@ -53,6 +53,7 @@ host_keys_mode: >-
 
 _openssh_service_name_map:
   default: sshd
+  Debian: ssh
   Ubuntu: ssh
 
 openssh_service_name: >-

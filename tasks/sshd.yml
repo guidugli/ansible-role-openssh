@@ -16,11 +16,34 @@
     - openssh
     - install
 
+- name: Ensure SSH privilege separation runtime directory exists
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags:
+    - openssh
+    - config
+
+- name: Ensure SSH host keys exist
+  ansible.builtin.command:
+    cmd: ssh-keygen -A
+  register: openssh_host_key_generation
+  changed_when: >-
+    (openssh_host_key_generation.stdout | trim | length > 0) or
+    (openssh_host_key_generation.stderr | trim | length > 0)
+  tags:
+    - openssh
+    - config
+
 - name: Ensure SSH service is enabled and started
   ansible.builtin.service:
     name: "{{ openssh_service_name }}"
     enabled: true
     state: started
+  when: ansible_facts['service_mgr'] == 'systemd'
   tags:
     - openssh
     - service
