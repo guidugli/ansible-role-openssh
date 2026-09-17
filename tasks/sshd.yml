@@ -54,7 +54,9 @@
     owner: root
     group: root
     mode: '0600'
-    state: file
+    state: touch
+    modification_time: preserve
+    access_time: preserve
   tags:
     - openssh
     - config
